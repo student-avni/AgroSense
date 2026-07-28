@@ -2,4 +2,4 @@ streamlit
 sentence-transformers
 faiss-cpu
 google-generativeai
-pandas
+pandasgit --version
