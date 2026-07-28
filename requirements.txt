@@ -3,3 +3,4 @@ sentence-transformers
 faiss-cpu
 google-generativeai
 pandasgit --version
+python-dotenv
