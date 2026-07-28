@@ -16,3 +16,20 @@ question_embeddings = model.encode(questions)
 
 print("Data loaded:", len(questions), "questions")
 print("Embeddings shape:", question_embeddings.shape)
+# Step 4: Build a FAISS index (this is like creating a search engine for your questions)
+dimension = question_embeddings.shape[1]  # this will be 384
+index = faiss.IndexFlatL2(dimension)
+index.add(np.array(question_embeddings))
+
+print("FAISS index built with", index.ntotal, "questions")
+
+# Step 5: Try a test search
+user_query = "leaves are yellow"
+query_embedding = model.encode([user_query])
+
+distances, indices = index.search(np.array(query_embedding), k=1)  # k=1 means "find top 1 match"
+
+best_match_index = indices[0][0]
+print("\nUser asked:", user_query)
+print("Best matching question in your data:", questions[best_match_index])
+print("Answer:", answers[best_match_index])
