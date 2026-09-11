@@ -27,11 +27,22 @@ index = faiss.IndexFlatL2(dimension)
 index.add(np.array(question_embeddings))
 
 # Step 5: Function that does the full RAG process
-def get_answer(user_query):
+def get_answer(user_query, language="English"):
     # Retrieval: find the most similar question in our data
     query_embedding = embedding_model.encode([user_query])
+
     distances, indices = index.search(np.array(query_embedding), k=1)
     best_match_index = indices[0][0]
+    best_distance = distances[0][0]
+
+    # Safeguard: reject if nothing in our knowledge base is actually close
+    THRESHOLD = 1.0  # tune this after testing with real + nonsense queries
+    if best_distance > THRESHOLD:
+        return (
+            "Sorry, I don't have information on that yet. Try asking about crops, fertilizers, pests, or irrigation.",
+            None
+        )
+
     retrieved_answer = answers[best_match_index]
     retrieved_question = questions[best_match_index]
 
@@ -43,14 +54,25 @@ Based on our knowledge base, here is relevant information:
 Question: {retrieved_question}
 Answer: {retrieved_answer}
 
-Using this information, give a clear, friendly, helpful answer to the farmer in simple language."""
+Using this information, give a clear, friendly, helpful answer to the farmer in simple language. Respond in {language}."""
 
     response = gemini_model.generate_content(prompt)
-    return response.text
+    return response.text, retrieved_question
 
 # Test it
 if __name__ == "__main__":
+    # Test 1: a query that SHOULD match well
     test_query = "leaves are yellow"
-    result = get_answer(test_query)
+
+    result, matched_q = get_answer(test_query)
     print("User asked:", test_query)
     print("AI Answer:", result)
+    print("Matched question:", matched_q)
+    print("-" * 50)
+
+    # Test 2: a nonsense query to check the safeguard works
+    test_query2 = "how to fix my phone screen"
+    result2, matched_q2 = get_answer(test_query2)
+    print("User asked:", test_query2)
+    print("AI Answer:", result2)
+    print("Matched question:", matched_q2)
