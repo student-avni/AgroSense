@@ -1,5 +1,5 @@
 import streamlit as st
-from rag_pipeline import get_answer
+import requests
 
 st.set_page_config(page_title="AgroSense - AI Farming Assistant", page_icon="🌾")
 
@@ -14,7 +14,14 @@ user_query = st.text_input("Enter your farming question:")
 if st.button("Get Answer"):
     if user_query:
         with st.spinner("Thinking..."):
-            answer, matched_question = get_answer(user_query, language)
+            res = requests.post(
+                "http://127.0.0.1:8000/ask",
+                json={"question": user_query, "language": language},
+                timeout=60,
+            )
+            data = res.json()
+            answer = data["answer"]
+            matched_question = data["matched_question"]
         st.success(answer)
 
         # Point 2: Show matched source (only if something was actually retrieved)
