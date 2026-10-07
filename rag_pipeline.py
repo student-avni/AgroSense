@@ -1,3 +1,6 @@
+import socket
+import urllib3.util.connection as urllib3_cn
+urllib3_cn.allowed_gai_family = lambda: socket.AF_INET
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 import faiss
@@ -8,7 +11,7 @@ from dotenv import load_dotenv
 
 # Load API key from .env file
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"), transport="rest")
 
 # Step 1: Load your Q&A data
 df = pd.read_csv("data/qa_data.csv")
@@ -56,10 +59,14 @@ Answer: {retrieved_answer}
 
 Using this information, give a clear, friendly, helpful answer to the farmer in simple language. Respond in {language}."""
 
-    response = gemini_model.generate_content(prompt)
-    return response.text, retrieved_question
+    try:
+        response = gemini_model.generate_content(prompt, request_options={"timeout": 20})
+        return response.text, retrieved_question
+    except Exception:
+        return retrieved_answer, retrieved_question
 
 # Test it
+
 if __name__ == "__main__":
     # Test 1: a query that SHOULD match well
     test_query = "leaves are yellow"

@@ -1,3 +1,5 @@
+import os
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
 from fastapi import FastAPI
 from pydantic import BaseModel
 from rag_pipeline import get_answer
